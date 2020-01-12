@@ -144,7 +144,7 @@ class Generation:
                if selector> p.plage[0] and selector<=p.plage[1]:
                    selectedIndividus.append(p)
                    break
-       print(len(selectedIndividus))
+       #print(len(selectedIndividus))
        return selectedIndividus
           
    
@@ -297,6 +297,7 @@ def croisement(parents):
     enfants = [enfant1, enfant2]
     return enfants
 
+"""
 #On sélectionne les "nbIndividus" meilleurs individus de la génération données
 def selection(nbIndividus, generation):
     listeProba = [p.proba for p in generation.individus]
@@ -308,7 +309,7 @@ def selection(nbIndividus, generation):
         if p.proba >= mediane and len(selection)<=nbIndividus:
             selection.append(p)
     return selection
-
+"""
             
 def main():
     
@@ -344,13 +345,20 @@ def main():
     nbIteration = 0
     
     #Début de la méthode globale. Tant que l'on a pas un fitness satisfaisant on re-itère
-    while meilleurFitness > 0.2:
+    while meilleurFitness > 1:
         
         nbIteration = nbIteration + 1
+        
+        #On met à jour le meilleur fitness dans la nouvelle generation
+        fitnessInGeneration = [i.fitness for i in premiereGeneration.individus]
+        meilleurFitness = min(fitnessInGeneration)
+        print("meilleur fitness")
+        print(meilleurFitness)
         
         #Croisement
         #Calcul de la proba pour chaque individu
         premiereGeneration.calculProba()
+        
         #Selection de 40 individus
         selectionParents = []
         selectionParents = premiereGeneration.selection(40)
@@ -365,29 +373,29 @@ def main():
             for e in coupleEnfant:
                 mesEnfants.append(e)
         generationEnfant = Generation(mesEnfants)
+        generationEnfant.calculProba()
         
         #Mutation generation precedente
         #Note: ici le tableau est re indexé donc la plage des individus n'est plus la meme après l'opération
         premiereGeneration.mutation()
+        premiereGeneration.calculPlage()
+        
         #On recalcul le fitness puis la proba
         for p in premiereGeneration.individus:
             p.calculFitness(individuVeritable.captures)
-        #premiereGeneration.calculProba()
+        premiereGeneration.calculProba()
         
         #On a notre population totale:
         populationTotale = [*generationEnfant.individus, *premiereGeneration.individus]
         populationTotaleGeneration = Generation(populationTotale)
+        populationTotaleGeneration.calculProba()
         #Selection: On revient à 100 individus
-        #nouvelleGeneration = populationTotaleGeneration.selection(100)
-        nouvelleGeneration = selection(100, populationTotaleGeneration)
+        nouvelleGeneration = populationTotaleGeneration.selection(100)
+        #nouvelleGeneration = selection(100, populationTotaleGeneration)
         premiereGeneration = Generation(nouvelleGeneration)
         
         
-        #On met à jour le meilleur fitness dans la nouvelle generation
-        fitnessInGeneration = [i.fitness for i in premiereGeneration.individus]
-        meilleurFitness = min(fitnessInGeneration)
-        print("meilleur fitness")
-        print(meilleurFitness)
+        
         
         """
         for p in premiereGeneration.individus:
@@ -395,7 +403,7 @@ def main():
             print(nbIteration)"""
             
         #limite à 100 itérations
-        if nbIteration > 1000:
+        if nbIteration > 10000:
             break
     """    
     for s in premiereGeneration.individus:
