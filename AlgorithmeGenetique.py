@@ -373,5 +373,3 @@ if __name__ == "__main__":
     main()
     
     
-    
-    #créer un objet génération?
