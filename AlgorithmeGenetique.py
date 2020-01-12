@@ -163,7 +163,6 @@ class Generation:
            selector = random.randint(1,4)
            #numéro des variable à modifier permutés aléatoirement, 1 pour r, 2 pour q, 3 pour k, 4 pour b0
            variables = np.random.permutation(variables)
-           #selector = random.randint(1,4) #On génère le nombre de parametres à changer
            while selector > 0:
                if variables[selector-1] == 1:
                    mu = self.individus[i].parameters["r"]
