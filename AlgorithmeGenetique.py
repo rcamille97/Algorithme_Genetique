@@ -84,7 +84,7 @@ class Individu:
         capturesSimulees = self.captures
         self.fitness = 0
         for i in range(len(capturesSimulees)):
-            self.fitness = self.fitness + np.power(capturesVeritables[i] - capturesSimulees[i], 2)
+            self.fitness = self.fitness + np.sqrt(np.power(capturesVeritables[i] - capturesSimulees[i], 2))
             
    
     def returnIndividu(self):
@@ -155,91 +155,51 @@ class Generation:
        qValues  = [e.parameters["q"] for e in self.individus[0::2]]
        kValues = [e.parameters["k"] for e in self.individus[0::2]]
        b0Values = [e.parameters["b0"] for e in self.individus[0::2]]
+       variables = [1,2,3,4]
+
        #On effectue la mutation sur 50% de la génération donnée, 2 pour en sélectionner 1/2 = 50%
-       for i in range(len(self.individus),2):
-           selector = random.randint(1,4) #On génère le nombre de parametres à changer
-           #Cas où l'on change 1 paramètre
-           if selector == 1 :
-               mu = self.individus[i].parameters["r"]
-               msigma = self.sigma(rValues)
-               while True:
-                   mR = np.random.normal(mu, msigma)
-                   if mR <= 0.5 and mR>=0:
-                       self.individus[i].parameters["r"] = mR   
-                       break
-           #Cas où l'on change 2 paramètres
-           elif selector == 2:
-               mu = self.individus[i].parameters["r"]
-               msigma = self.sigma(rValues)
-               while True:
-                   mR = np.random.normal(mu, msigma)
-                   if mR <= 0.5 and mR>=0:
-                       self.individus[i].parameters["r"] = mR  
-                       break
-               mu = self.individus[i].parameters["q"]
-               msigma = self.sigma(qValues)
-               while True:
-                   mQ = np.random.normal(mu, msigma)
-                   if mQ <= 0.5 and mQ>=0:
-                       self.individus[i].parameters["q"] = mQ
-                       break
-           #Cas où l'on change 3 paramètres
-           elif selector == 3:
-               mu = self.individus[i].parameters["r"]
-               msigma = self.sigma(rValues)
-               while True:
-                   mR = np.random.normal(mu, msigma)
-                   if mR <= 0.5 and mR>=0:
-                       self.individus[i].parameters["r"] = mR
-                       break
-               mu = self.individus[i].parameters["q"]
-               msigma = self.sigma(qValues)
-               while True:
-                   mQ = np.random.normal(mu, msigma)
-                   if mQ <= 0.5 and mQ>=0:
-                       self.individus[i].parameters["q"] = mQ
-                       break
-               mu = self.individus[i].parameters["k"]
-               msigma = self.sigma(kValues)
-               while True:
-                   mK = np.random.normal(mu, msigma)
-                   if mK <= 2000 and mK>=100:
-                       self.individus[i].parameters["k"] = mK
-                       break
-           #Cas où l'on change 4 paramètres
-           else:
-               mu = self.individus[i].parameters["r"]
-               msigma = self.sigma(rValues)
-               while True:
-                   mR = np.random.normal(mu, msigma)
-                   if mR <= 0.5 and mR>=0:
-                       self.individus[i].parameters["r"] = mR
-                       break
-               mu = self.individus[i].parameters["q"]
-               msigma = self.sigma(qValues)
-               while True:
-                   mQ = np.random.normal(mu, msigma)
-                   if mQ <= 0.5 and mQ>=0:
-                       self.individus[i].parameters["q"] = mQ
-                       break
-               mu = self.individus[i].parameters["k"]
-               msigma = self.sigma(kValues)
-               while True:
-                   mK = np.random.normal(mu, msigma)
-                   if mK <= 2000 and mK>=100:
-                       self.individus[i].parameters["k"] = mK
-                       break
-               mu = self.individus[i].parameters["b0"]
-               msigma = self.sigma(b0Values)
-               while True:
-                   mB0 = np.random.normal(mu, msigma)
-                   if mB0 <= 2000 and mB0>=100:
-                       self.individus[i].parameters["b0"] = mB0
-                       break
+       for i in range(0,len(self.individus),2):
+           #Nombre de variables à modifier
+           selector = random.randint(1,4)
+           #numéro des variable à modifier permutés aléatoirement, 1 pour r, 2 pour q, 3 pour k, 4 pour b0
+           variables = np.random.permutation(variables)
+           #selector = random.randint(1,4) #On génère le nombre de parametres à changer
+           while selector > 0:
+               if variables[selector-1] == 1:
+                   mu = self.individus[i].parameters["r"]
+                   msigma = self.sigma(rValues)
+                   while True:
+                       mR = np.random.normal(mu, msigma)
+                       if mR <= 0.5 and mR>=0:
+                           self.individus[i].parameters["r"] = mR   
+                           break
+               elif variables[selector-1] == 2:
+                   mu = self.individus[i].parameters["q"]
+                   msigma = self.sigma(qValues)
+                   while True:
+                       mQ = np.random.normal(mu, msigma)
+                       if mQ <= 0.5 and mQ>=0:
+                           self.individus[i].parameters["q"] = mQ
+                           break
+               elif variables[selector-1] == 3:
+                   mu = self.individus[i].parameters["k"]
+                   msigma = self.sigma(kValues)
+                   while True:
+                       mK = np.random.normal(mu, msigma)
+                       if mK <= 2000 and mK>=100:
+                           self.individus[i].parameters["k"] = mK
+                           break
+               elif variables[selector-1] == 4:
+                   mu = self.individus[i].parameters["b0"]
+                   msigma = self.sigma(b0Values)
+                   while True:
+                       mB0 = np.random.normal(mu, msigma)
+                       if mB0 <= 2000 and mB0>=100:
+                           self.individus[i].parameters["b0"] = mB0
+                           break
+               selector = selector - 1
            self.individus[i].simulationCapture()
-           #self.individus[i].calculFitness()
-       #self.calculProba()
-        
+           
    def sigma(self, vValues):
        return max(vValues) - np.sum(vValues)/len(vValues)
             
@@ -297,7 +257,7 @@ def croisement(parents):
     enfants = [enfant1, enfant2]
     return enfants
 
-"""
+
 #On sélectionne les "nbIndividus" meilleurs individus de la génération données
 def selection(nbIndividus, generation):
     listeProba = [p.proba for p in generation.individus]
@@ -309,7 +269,7 @@ def selection(nbIndividus, generation):
         if p.proba >= mediane and len(selection)<=nbIndividus:
             selection.append(p)
     return selection
-"""
+
             
 def main():
     
@@ -345,7 +305,7 @@ def main():
     nbIteration = 0
     
     #Début de la méthode globale. Tant que l'on a pas un fitness satisfaisant on re-itère
-    while meilleurFitness > 1:
+    while True:
         
         nbIteration = nbIteration + 1
         
@@ -361,8 +321,8 @@ def main():
         
         #Selection de 40 individus
         selectionParents = []
-        selectionParents = premiereGeneration.selection(40)
-        #selectionParents = selection(40, premiereGeneration)
+        #selectionParents = premiereGeneration.selection(40)
+        selectionParents = selection(40, premiereGeneration)
         
         #Creation des couples
         mesCouples = creationCouple(selectionParents)
@@ -378,6 +338,7 @@ def main():
         #Mutation generation precedente
         #Note: ici le tableau est re indexé donc la plage des individus n'est plus la meme après l'opération
         premiereGeneration.mutation()
+        premiereGeneration.calculProba()
         premiereGeneration.calculPlage()
         
         #On recalcul le fitness puis la proba
@@ -390,12 +351,10 @@ def main():
         populationTotaleGeneration = Generation(populationTotale)
         populationTotaleGeneration.calculProba()
         #Selection: On revient à 100 individus
-        nouvelleGeneration = populationTotaleGeneration.selection(100)
-        #nouvelleGeneration = selection(100, populationTotaleGeneration)
+        #nouvelleGeneration = populationTotaleGeneration.selection(100)
+        nouvelleGeneration = selection(100, populationTotaleGeneration)
         premiereGeneration = Generation(nouvelleGeneration)
-        
-        
-        
+
         
         """
         for p in premiereGeneration.individus:
@@ -403,11 +362,9 @@ def main():
             print(nbIteration)"""
             
         #limite à 100 itérations
-        if nbIteration > 10000:
+        if nbIteration > 1000 or meilleurFitness <= 1:
             break
-    """    
-    for s in premiereGeneration.individus:
-        print(s.returnIndividu())"""
+
     print("Premier meilleur fitness à la génération " + str(nbIteration))
     
     return
