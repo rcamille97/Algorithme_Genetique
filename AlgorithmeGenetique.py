@@ -71,12 +71,12 @@ class Individu:
             self.parameters["b0"] = k
         biomasse = self.parameters["b0"]
         for e in effortValues:
+            capture = q * e * biomasse
             biomasse = biomasse +  r * (1 - biomasse/k) * biomasse - q * e * biomasse
             if biomasse <0:
                 biomasse = 0
             if biomasse > k:
                 biomasse = k
-            capture = q * e * biomasse
             mCaptures.append(capture)
         self.captures = mCaptures
 
@@ -155,7 +155,7 @@ class Generation:
        qValues  = [e.parameters["q"] for e in self.individus[0::2]]
        kValues = [e.parameters["k"] for e in self.individus[0::2]]
        b0Values = [e.parameters["b0"] for e in self.individus[0::2]]
-       #On effectue la mutation sur 50% de la génération donnée
+       #On effectue la mutation sur 50% de la génération donnée, 2 pour en sélectionner 1/2 = 50%
        for i in range(len(self.individus),2):
            selector = random.randint(1,4) #On génère le nombre de parametres à changer
            #Cas où l'on change 1 paramètre
@@ -237,7 +237,8 @@ class Generation:
                        self.individus[i].parameters["b0"] = mB0
                        break
            self.individus[i].simulationCapture()
-       self.calculProba()
+           #self.individus[i].calculFitness()
+       #self.calculProba()
         
    def sigma(self, vValues):
        return max(vValues) - np.sum(vValues)/len(vValues)
@@ -251,7 +252,7 @@ class Generation:
    
 #Définition de la loi normale initialisée aux valeurs mu = 0.5 et sigma = 0.2
 def loiNormale(mu = 0.5, sigma = 0.2):
-    #Equivalent du do while w > 1 
+    #Equivalent du do while w > 1 en python
     while True: 
         alea1 = random.uniform(0, 1)
         alea2 = random.uniform(0, 1)
@@ -265,7 +266,7 @@ def creationCouple(parents):
     couples = []
     parents1 = parents[0::2] #Les parents 1 sont les individus aux rangs pairs dans la selection
     parents2 = parents[1::2] #Les parents 2 sont les individus aux rangs impairs dans la selection
-    for i in range(len(parents1)):
+    for i in range(min(len(parents1),len(parents2))):
         couples.append([parents1[i], parents2[i]])
     return couples
 
@@ -347,69 +348,58 @@ def main():
         
         nbIteration = nbIteration + 1
         
-        print("Taille de la génération initiale: ")
-        print(len(premiereGeneration.individus))
+        #Croisement
+        #Calcul de la proba pour chaque individu
         premiereGeneration.calculProba()
+        #Selection de 40 individus
+        selectionParents = []
+        selectionParents = premiereGeneration.selection(40)
+        #selectionParents = selection(40, premiereGeneration)
         
-        #On sélectionne le meilleur fitness de la génération courante
-        fitnessByGeneration = [i.fitness for i in premiereGeneration.individus]
-        meilleurFitness = min(fitnessByGeneration)
+        #Creation des couples
+        mesCouples = creationCouple(selectionParents)
+        #Generation des enfants
+        mesEnfants = []
+        for p in mesCouples:
+            coupleEnfant = croisement(p)
+            for e in coupleEnfant:
+                mesEnfants.append(e)
+        generationEnfant = Generation(mesEnfants)
         
-        #Selection des 40 meilleurs parents
-        #mselection = selection(40, premiereGeneration)
-        mselection = premiereGeneration.selection(40)
-        
-        #Creation d'une liste de couple
-        mcouples = creationCouple(mselection)
-        
-        #Création des enfants
-        enfants = []
-        for c in mcouples:
-            menfants = croisement(c)
-            for e in menfants:
-                e.calculFitness(individuVeritable.captures)
-                enfants.append(e)
-                
-        generationEnfant = Generation(enfants)
-        print("Taille de la génération enfants: ")
-        print(len(generationEnfant.individus))
-        generationEnfant.calculProba()
-        
-        #Mutations de 50% de la génération précédente
+        #Mutation generation precedente
+        #Note: ici le tableau est re indexé donc la plage des individus n'est plus la meme après l'opération
         premiereGeneration.mutation()
-        #recalcul du fitness avec les nouvelles captures
+        #On recalcul le fitness puis la proba
         for p in premiereGeneration.individus:
             p.calculFitness(individuVeritable.captures)
-        #Recalcul des proba
-        premiereGeneration.calculProba()
+        #premiereGeneration.calculProba()
         
-        #Récupération des individus de la génération précédente et de la génération des enfants
-        firstGenerationWithMutation = premiereGeneration.individus
-        childs = generationEnfant.individus
-        
-        #Création de la nouvelle génération
-        nouvelleGeneration = [*firstGenerationWithMutation, *childs]
-        print("Taille de la nouvelle génération: ")
-        print(len(nouvelleGeneration))
-        nouvelleGeneration = Generation(nouvelleGeneration)
-        nouvelleGeneration.calculProba()
-        
-        #Retour à 100 individus en sélectionnant les 100 meilleurs parmis les 140
-        #newGenerationSelection = selection(100, nouvelleGeneration)
-        newGenerationSelection = nouvelleGeneration.selection(100)
-        premiereGeneration = Generation(newGenerationSelection)
+        #On a notre population totale:
+        populationTotale = [*generationEnfant.individus, *premiereGeneration.individus]
+        populationTotaleGeneration = Generation(populationTotale)
+        #Selection: On revient à 100 individus
+        #nouvelleGeneration = populationTotaleGeneration.selection(100)
+        nouvelleGeneration = selection(100, populationTotaleGeneration)
+        premiereGeneration = Generation(nouvelleGeneration)
         
         
-        """for p in premiereGeneration.individus:
+        #On met à jour le meilleur fitness dans la nouvelle generation
+        fitnessInGeneration = [i.fitness for i in premiereGeneration.individus]
+        meilleurFitness = min(fitnessInGeneration)
+        print("meilleur fitness")
+        print(meilleurFitness)
+        
+        """
+        for p in premiereGeneration.individus:
             print(p.returnIndividu())
             print(nbIteration)"""
             
         #limite à 100 itérations
         if nbIteration > 1000:
             break
-        
-    for s in mselection:
-        print(s.returnIndividu())
+    """    
+    for s in premiereGeneration.individus:
+        print(s.returnIndividu())"""
     print("Premier meilleur fitness à la génération " + str(nbIteration))
     
     return
